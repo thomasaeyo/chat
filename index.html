@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<title>Practice Chat Room</title>
+		<link rel="stylesheet" type="text/css" href="stylesheet.css"/>
+	</head>
+	<body>
+		<ul id="messages"></ul>
+		<form action="" onsubmit="return send()">
+			<input id="m" autocomplete="off"/><button>Send</button>
+		</form>
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="http://code.jquery.com/jquery-1.11.1.js"></script>
+		<script>
+			var socket = io();
+
+			socket.on('connect', function() {
+				socket.emit('join', {});
+			});
+
+			socket.on('join', function(data) {
+				$('#messages').append('<li id=notification>'+data['name']+' joined the room</li>');
+			})
+			function send() {
+				socket.emit('chat message', $('#m').val());
+				$('#m').val('');
+				return false;
+			};
+
+			socket.on('chat message', function(data) {
+				$('#messages').append('<li><span id=name>'+data['name']+':</span>'+data['message']+'</li>');
+			});
+		</script>
+	</body>
+</html>
