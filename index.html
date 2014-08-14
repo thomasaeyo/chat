@@ -19,7 +19,7 @@
 			});
 
 			socket.on('join', function(data) {
-				$('#messages').append('<li id=notification>'+data['name']+' joined the room</li>');
+				$('#messages').append('<li id=notification>User-'+data['name']+' joined the room</li>');
 			})
 			function send() {
 				socket.emit('chat message', $('#m').val());

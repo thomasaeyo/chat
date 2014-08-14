@@ -11,13 +11,12 @@ app.get('/', function(req, res) {
 	res.sendFile(__dirname + '/index.html');
 });
 
-
-var storeEachSocket = {};
-
+var users = [];
+var missing = -1;
 
 io.set('authorization', function(handshake, accept){
 	var cookie = handshake.headers.cookie
-	if(cookie in storeEachSocket)
+	if(cookie in users)
 		accept('User already connected', false);
 	else
 		accept(null, true);
@@ -25,20 +24,28 @@ io.set('authorization', function(handshake, accept){
 
 io.on('connection', function(socket){
     var cookie = socket.handshake.headers.cookie;
-    storeEachSocket[cookie] = socket;
+    add(users, cookie);
+    console.log("************************");
+    console.log("users: ")
+    console.log(users);
+	console.log("length: " + users.length);
+    console.log("************************");
 
     socket.on('join', function() {
-    	io.emit('join', {'name': cookie});
+    	console.log(users.indexOf(cookie));
+    	io.emit('join', {'name': users.indexOf(cookie)+1});
     });
 
     socket.on('chat message', function(msg) {
-    	io.emit('chat message', {'name': cookie, 'message': msg});
+    	console.log(users);
+    	io.emit('chat message', {'name': users[cookie], 'message': msg});
     });
-});
-
-io.on('disconnect', function(socket){
-   var cookie = socket.handshake.headers.cookie;
-   delete storeEachSocket[user_id]
+    
+    socket.on('disconnect', function() {
+    	console.log("\n");
+		var cookie = socket.handshake.headers.cookie;
+		missing = remove(users, cookie);
+    });
 });
 
 server.listen(3000, function() {
@@ -46,51 +53,33 @@ server.listen(3000, function() {
 });
 
 
-
-
-/*
-io.on('connection', function(socket) {
-	express_sid = cookie.parse(socket.handshake.headers.cookie)['express.sid'];
-	console.log(socket.user);
-	if (express_sid == null) {
-		//console.log(socket.handshake.headers.cookie);
-		return;
-	}
-	var id = 0;
-	if(contains(sockets, express_sid)) {
-		id = sockets.indexOf(express_sid);
-	} else {
-		sockets.push(express_sid);
-		id = sockets.indexOf(express_sid);
-	}
-	console.log('User-' + id + ' connected');
-	console.log(sockets);
-	console.log("**********");
-	//If a user leaves the chat room
-	socket.on('disconnect', function() {
-		express_sid = cookie.parse(socket.handshake.headers.cookie)['express.sid'];
-		var to_remove = sockets.indexOf(express_sid);
-		sockets.splice(to_remove, 1);
-		console.log('User-' + to_remove + ' disconnected');
-	});
-
-	socket.on('chat message', function(msg) {
-		io.emit('chat message', msg);
-		console.log('message: ' + msg);
-	})
-});
-*/
-
-
-
-
-function contains(array, item) {
+function remove(array, item) {
+	var index = 0;
+	var found = false;
 	for(var i = 0; i < array.length; i ++) {
-		if(array[i] === item) {
-			return true;
+		if(array[i] == item) {
+			index = i;
+			found = true;
 		}
 	}
-	return false;
+	if(true) {
+		if(index == array.length) {
+			array.splice(index,1);
+		} else {
+			array[index] = 0;
+			missing = index;
+		}
+	}
+	return missing;
+}
+
+function add(array, item) {
+	if(missing == -1) {
+		array.push(item);
+	} else {
+		array[missing] = item;
+	}
+
 }
 
 
